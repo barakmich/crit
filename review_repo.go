@@ -22,12 +22,14 @@ type ReviewRepo struct {
 	Specs   []ReviewSpec
 }
 
+// Save commits the ReviewRepo to disk.
 func (rr *ReviewRepo) Save() error {
 	jpath := filepath.Join(rr.BaseDir, "review_repo.json")
 	f, err := os.Create(jpath)
 	if err != nil {
 		return err
 	}
+
 	defer f.Close()
 	err = json.NewEncoder(f).Encode(rr)
 	if err != nil {
@@ -73,6 +75,7 @@ func OpenReviewRepo(path string) (*ReviewRepo, error) {
 	return &rr, nil
 }
 
+// GetReviewRepoDir returns the configured path for the review repo.
 func GetReviewRepoDir() (out string) {
 	out = viper.GetString(OptReviewRepo)
 	if out != "" {

@@ -32,6 +32,7 @@ func (r *Review) Save() error {
 	if err != nil {
 		return err
 	}
+
 	defer f.Close()
 	err = json.NewEncoder(f).Encode(r)
 	if err != nil {
