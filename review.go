@@ -3,10 +3,12 @@ package crit
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 )
 
 var ErrReviewNotExist = errors.New("review doesn't exist")
@@ -61,7 +63,8 @@ func (rr *ReviewRepo) CreateReview(spec ReviewSpec) error {
 		return errors.New("No name provided in ReviewSpec")
 	}
 	r := &Review{
-		Spec: spec,
+		Spec:       spec,
+		reviewRepo: rr,
 	}
 	err := os.MkdirAll(r.DataDir(), 0700)
 	if err != nil {
@@ -71,7 +74,14 @@ func (rr *ReviewRepo) CreateReview(spec ReviewSpec) error {
 	if err != nil {
 		return err
 	}
-	// TODO Clone
+	err = r.initClone()
+	if err != nil {
+		return err
+	}
+	err = r.fetchAndUpdate()
+	if err != nil {
+		return err
+	}
 	err = r.Save()
 	if err != nil {
 		return err
@@ -81,6 +91,63 @@ func (rr *ReviewRepo) CreateReview(spec ReviewSpec) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *Review) fetchRemote(remotename string) error {
+	remote, err := r.repo.Remote(remotename)
+	if err != nil {
+		return err
+	}
+	err = remote.Fetch(&git.FetchOptions{
+		// TODO(barakmich): fetch only the branch needed
+		RefSpecs: []config.RefSpec{
+			config.RefSpec(fmt.Sprintf("+refs/heads/*:refs/remotes/%s/*", remotename)),
+		},
+		Force: true,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+	return nil
+}
+
+func (r *Review) fetchAndUpdate() error {
+	err := r.fetchRemote("base")
+	if err != nil {
+		return err
+	}
+	err = r.fetchRemote("review")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Review) initClone() error {
+	repo, err := git.PlainClone(r.RepoDir(), true, &git.CloneOptions{
+		URL:        r.Spec.CloneURL,
+		NoCheckout: true,
+		Tags:       git.NoTags,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: "base",
+		URLs: []string{r.Spec.BaseURL},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: "review",
+		URLs: []string{r.Spec.ReviewURL},
+	})
+	if err != nil {
+		return err
+	}
+	r.repo = repo
 	return nil
 }
 

@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/barakmich/crit"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -14,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Use:   "crit",
 	Short: "crit is a code review tool for git repositories",
 	Run: func(cmd *cobra.Command, args []string) {
-		crit.OpenReviewRepo()
+		fmt.Println(cmd.Usage())
 	},
 }
 
@@ -26,4 +25,9 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func fatal(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }

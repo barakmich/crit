@@ -12,4 +12,5 @@
 *.out
 
 crit
+!cmd/crit/
 vendor/**
