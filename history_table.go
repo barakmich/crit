@@ -74,7 +74,20 @@ func (h *historyTable) buildInfo() error {
 		if err != nil {
 			return err
 		}
+		stats, err := c.commit.Stats()
+		if err != nil {
+			return err
+		}
+		statset := make(map[string]bool)
+		for _, x := range stats {
+			if !(x.Addition == 0 && x.Deletion == 0) {
+				statset[x.Name] = true
+			}
+		}
 		err = i.ForEach(func(f *object.File) error {
+			if !statset[f.Name] {
+				return nil
+			}
 			v, ok := files[f.Name]
 			if !ok {
 				hr := &historyRow{
@@ -135,7 +148,6 @@ func (h *historyTable) buildTable() {
 
 	h.Table = table
 	table.SetBorders(true)
-	fmt.Println("colcount:", h.Table.GetColumnCount())
 }
 
 func (h *historyTable) setColsToShortSHA() {
@@ -159,7 +171,6 @@ func (h *historyTable) setRowsToDiff() {
 				panic(err)
 			}
 			for _, stat := range stats {
-				fmt.Println(stat)
 				if stat.Name == r.filename {
 					c.SetText(fmt.Sprintf("[#00ff00]+%d [#ff0000]-%d[white]", stat.Addition, stat.Deletion))
 				}
