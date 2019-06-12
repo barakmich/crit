@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
@@ -68,7 +69,7 @@ func (h *historyTable) buildInfo() error {
 	files := make(map[string]*historyRow)
 	h.cols = nil
 
-	for _, c := range h.uiState.review.state.reviewCommits {
+	for _, c := range forwardCommits {
 		i, err := c.commit.Files()
 		if err != nil {
 			return err
@@ -81,10 +82,14 @@ func (h *historyTable) buildInfo() error {
 					filename: f.Name,
 					commits:  make([]*commitCell, len(h.cols)),
 				}
+				for i := 0; i < len(hr.commits); i++ {
+					hr.commits[i] = newCommitCell(nil)
+				}
 				files[f.Name] = hr
 				v = hr
 			}
-			v.commits = append(v.commits, newCommitCell(&c))
+			ccopy := c
+			v.commits = append(v.commits, newCommitCell(&ccopy))
 			return nil
 		})
 		if err != nil {
@@ -112,8 +117,9 @@ func (h *historyTable) buildInfo() error {
 func (h *historyTable) buildTable() {
 	table := tview.NewTable()
 	table.SetBorderPadding(1, 1, 1, 1)
+	table.SetBackgroundColor(tcell.ColorDefault)
 
-	table.SetCell(0, 0, &tview.TableCell{})
+	table.SetCell(0, 0, tview.NewTableCell(""))
 	for i, x := range h.cols {
 		table.SetCell(0, i+1, x.TableCell)
 	}
@@ -147,15 +153,16 @@ func (h *historyTable) setRowsToDiff() {
 				continue
 			}
 			c.SetText("")
+			c.SetAlign(tview.AlignCenter)
 			stats, err := c.commit.commit.Stats()
 			if err != nil {
 				panic(err)
 			}
 			for _, stat := range stats {
+				fmt.Println(stat)
 				if stat.Name == r.filename {
-					c.SetText(fmt.Sprintf("+%d,-%d", stat.Addition, stat.Deletion))
+					c.SetText(fmt.Sprintf("[#00ff00]+%d [#ff0000]-%d[white]", stat.Addition, stat.Deletion))
 				}
-				break
 			}
 		}
 	}

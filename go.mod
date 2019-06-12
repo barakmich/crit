@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/gdamore/tcell v1.1.2
 	github.com/gliderlabs/ssh v0.1.4 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
