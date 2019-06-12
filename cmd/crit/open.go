@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/barakmich/crit"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +23,9 @@ var openCmd = &cobra.Command{
 		if err != nil {
 			fatal(err)
 		}
-		fmt.Printf("%#v\n", r)
+		err = crit.ReviewUIMain(r)
+		if err != nil {
+			fatal(err)
+		}
 	},
 }

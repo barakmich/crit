@@ -40,7 +40,7 @@ func (rc reviewCommit) String() string {
 
 func (r *Review) startReviewState() error {
 	rs, err := newReviewState(r)
-	r.reviewState = rs
+	r.state = rs
 	rs.debugPrint()
 	return err
 

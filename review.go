@@ -17,6 +17,7 @@ type Review struct {
 	Spec       ReviewSpec
 	repo       *git.Repository
 	reviewRepo *ReviewRepo
+	state      *reviewState
 }
 
 type ReviewSpec struct {
@@ -167,7 +168,17 @@ func (rr *ReviewRepo) openSpec(spec ReviewSpec) (*Review, error) {
 	}
 	defer f.Close()
 	var r Review
+	r.reviewRepo = rr
 	err = json.NewDecoder(f).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+	repo, err := git.PlainOpen(r.RepoDir())
+	if err != nil {
+		return nil, err
+	}
+	r.repo = repo
+	err = r.startReviewState()
 	if err != nil {
 		return nil, err
 	}
