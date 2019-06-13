@@ -11,9 +11,10 @@ import (
 
 type historyTable struct {
 	*tview.Table
-	uiState *UIState
-	rows    []*historyRow
-	cols    []*commitInfo
+	uiState  *UIState
+	rows     []*historyRow
+	cols     []*commitInfo
+	doUpdate bool
 }
 
 type historyRow struct {
@@ -148,6 +149,26 @@ func (h *historyTable) buildTable() {
 
 	h.Table = table
 	table.SetBorders(true)
+	table.SetFixed(1, 1)
+	table.SetSelectable(false, true)
+	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color23, 0)
+	table.SetSelectionChangedFunc(func(row, col int) {
+		h.doUpdate = true
+	})
+	table.SetInputCapture(h.historyInput)
+}
+
+func (h *historyTable) historyInput(event *tcell.EventKey) *tcell.EventKey {
+	h.doUpdate = true
+	return event
+}
+
+func (h *historyTable) Draw(screen tcell.Screen) {
+	if h.doUpdate {
+		screen.Clear()
+		h.doUpdate = false
+	}
+	h.Table.Draw(screen)
 }
 
 func (h *historyTable) setColsToShortSHA() {
