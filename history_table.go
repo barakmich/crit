@@ -154,6 +154,13 @@ func (h *historyTable) buildTable() {
 	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color23, 0)
 	table.SetSelectionChangedFunc(func(row, col int) {
 		h.doUpdate = true
+		col -= 1
+		if col >= 0 {
+			h.uiState.update(func(ui *UIState) error {
+				ui.selectedCommit = &h.cols[col].commit
+				return nil
+			})
+		}
 	})
 	table.SetInputCapture(h.historyInput)
 }
