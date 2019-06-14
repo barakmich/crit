@@ -11,10 +11,11 @@ import (
 
 type historyTable struct {
 	*tview.Table
-	uiState  *UIState
-	rows     []*historyRow
-	cols     []*commitInfo
-	doUpdate bool
+	uiState          *UIState
+	rows             []*historyRow
+	cols             []*commitInfo
+	doUpdate         bool
+	prevCol, prevRow int
 }
 
 type historyRow struct {
@@ -36,6 +37,8 @@ type commitInfo struct {
 func newHistoryTable(ui *UIState) (*historyTable, error) {
 	h := &historyTable{
 		uiState: ui,
+		prevCol: -1,
+		prevRow: -1,
 	}
 	err := h.buildInfo()
 	if err != nil {
@@ -44,6 +47,7 @@ func newHistoryTable(ui *UIState) (*historyTable, error) {
 	h.buildTable()
 	h.setColsToShortSHA()
 	h.setRowsToDiff()
+	h.moveCursors(0, 0)
 	return h, nil
 }
 
@@ -133,12 +137,12 @@ func (h *historyTable) buildTable() {
 	table.SetBorderPadding(1, 1, 1, 1)
 	table.SetBackgroundColor(tcell.ColorDefault)
 
-	table.SetCell(0, 0, tview.NewTableCell(""))
+	table.SetCell(0, 0, tview.NewTableCell("").SetSelectable(false))
 	for i, x := range h.cols {
-		table.SetCell(0, i+1, x.TableCell)
+		table.SetCell(0, i+1, x.TableCell.SetSelectable(false))
 	}
 	for i, r := range h.rows {
-		table.SetCell(i+1, 0, r.headCell)
+		table.SetCell(i+1, 0, r.headCell.SetSelectable(false))
 		for j, cell := range r.commits {
 			if cell == nil {
 				continue
@@ -150,11 +154,15 @@ func (h *historyTable) buildTable() {
 	h.Table = table
 	table.SetBorders(true)
 	table.SetFixed(1, 1)
-	table.SetSelectable(false, true)
-	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color23, 0)
+	table.SetSelectable(true, true)
+	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color23, tcell.AttrBold)
 	table.SetSelectionChangedFunc(func(row, col int) {
-		h.doUpdate = true
+		// Remove the borders
+		row -= 1
 		col -= 1
+		h.moveCursors(row, col)
+		h.doUpdate = true
+
 		if col >= 0 {
 			h.uiState.update(func(ui *UIState) error {
 				ui.selectedCommit = &h.cols[col].commit
@@ -166,7 +174,7 @@ func (h *historyTable) buildTable() {
 }
 
 func (h *historyTable) historyInput(event *tcell.EventKey) *tcell.EventKey {
-	h.doUpdate = true
+	//h.doUpdate = true
 	return event
 }
 
@@ -204,6 +212,38 @@ func (h *historyTable) setRowsToDiff() {
 				}
 			}
 		}
+	}
+}
+
+func (h *historyTable) moveCursors(row, col int) {
+	if row >= 0 && row < len(h.rows) {
+		if h.prevRow >= 0 {
+			x := h.rows[h.prevRow]
+			for _, cell := range x.commits {
+				cell.SetBackgroundColor(tcell.ColorDefault)
+			}
+		}
+		x := h.rows[row]
+		for _, cell := range x.commits {
+			cell.SetBackgroundColor(tcell.Color236)
+		}
+		h.prevRow = row
+	}
+	if col >= 0 && col < len(h.cols) {
+		if h.prevCol >= 0 {
+			for i, r := range h.rows {
+				if i == row {
+					continue
+				}
+				x := r.commits[h.prevCol]
+				x.SetBackgroundColor(tcell.ColorDefault)
+			}
+		}
+		for _, r := range h.rows {
+			x := r.commits[col]
+			x.SetBackgroundColor(tcell.Color236)
+		}
+		h.prevCol = col
 	}
 }
 
