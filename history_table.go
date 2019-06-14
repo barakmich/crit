@@ -66,7 +66,7 @@ func newCommitInfo(c reviewCommit) *commitInfo {
 }
 
 func (h *historyTable) buildInfo() error {
-	cs := h.uiState.review.state.reviewCommits
+	cs := h.uiState.review.reviewCommits
 	forwardCommits := make([]reviewCommit, len(cs))
 	copy(forwardCommits, cs)
 	reverseReviewCommits(forwardCommits)

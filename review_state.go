@@ -38,13 +38,6 @@ func (rc reviewCommit) String() string {
 	return fmt.Sprintf("commit:%s base:%s", rc.commit.ID().String(), rc.base.String())
 }
 
-func (r *Review) startReviewState() error {
-	rs, err := newReviewState(r)
-	r.state = rs
-	return err
-
-}
-
 func (rs *reviewState) debugPrint() error {
 	fmt.Printf("base: %s\n", *rs.baseHash)
 	fmt.Printf("review: %s\n", *rs.reviewHash)

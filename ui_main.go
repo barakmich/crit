@@ -3,8 +3,12 @@ package crit
 import "github.com/rivo/tview"
 
 func ReviewUIMain(r *Review) error {
+	rs, err := newReviewState(r)
+	if err != nil {
+		return err
+	}
 	ui := &UIState{
-		review: r,
+		review: rs,
 	}
 	table, err := newHistoryTable(ui)
 	if err != nil {

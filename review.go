@@ -14,10 +14,10 @@ import (
 var ErrReviewNotExist = errors.New("review doesn't exist")
 
 type Review struct {
-	Spec       ReviewSpec
-	repo       *git.Repository
-	reviewRepo *ReviewRepo
-	state      *reviewState
+	Spec             ReviewSpec
+	repo             *git.Repository
+	reviewRepo       *ReviewRepo
+	ReviewOperations []ReviewOp
 }
 
 type ReviewSpec struct {
@@ -178,9 +178,5 @@ func (rr *ReviewRepo) openSpec(spec ReviewSpec) (*Review, error) {
 		return nil, err
 	}
 	r.repo = repo
-	err = r.startReviewState()
-	if err != nil {
-		return nil, err
-	}
 	return &r, nil
 }
