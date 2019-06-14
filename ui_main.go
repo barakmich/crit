@@ -15,6 +15,11 @@ func ReviewUIMain(r *Review) error {
 		return err
 	}
 
+	header, err := newHeader(ui)
+	if err != nil {
+		return err
+	}
+
 	footer, err := newFooter(ui)
 	if err != nil {
 		return err
@@ -25,6 +30,7 @@ func ReviewUIMain(r *Review) error {
 	flex.AddItem(details, 0, 4, false)
 	vflex := tview.NewFlex()
 	vflex.SetDirection(tview.FlexRow)
+	vflex.AddItem(header, 1, 1, false)
 	vflex.AddItem(flex, 0, 1, true)
 	vflex.AddItem(footer, 1, 1, false)
 	app := tview.NewApplication()

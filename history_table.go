@@ -155,7 +155,7 @@ func (h *historyTable) buildTable() {
 	table.SetBorders(true)
 	table.SetFixed(1, 1)
 	table.SetSelectable(true, true)
-	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color23, tcell.AttrBold)
+	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color25, tcell.AttrBold)
 	table.SetSelectionChangedFunc(func(row, col int) {
 		// Remove the borders
 		row -= 1
@@ -267,7 +267,7 @@ func (h *historyTable) setRowsToDiff() {
 			}
 			for _, stat := range stats {
 				if stat.Name == r.filename {
-					c.SetText(fmt.Sprintf("[#00ff00]+%d [#ff0000]-%d[white]", stat.Addition, stat.Deletion))
+					c.SetText(fmt.Sprintf("[#00ff00]+%d [#ff5f5f]-%d[white]", stat.Addition, stat.Deletion))
 				}
 			}
 		}
