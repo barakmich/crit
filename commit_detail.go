@@ -3,7 +3,6 @@ package crit
 import (
 	"fmt"
 
-	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
@@ -14,7 +13,8 @@ type commitDetail struct {
 
 func newCommitDetail(ui *UIState) (*commitDetail, error) {
 	text := tview.NewTextView()
-	text.SetBackgroundColor(tcell.ColorDefault)
+	text.SetBackgroundColor(ui.theme.CommitDetailBackground)
+	text.SetTextColor(ui.theme.CommitDetailForeground)
 	text.SetBorder(true)
 	cd := &commitDetail{
 		TextView: text,

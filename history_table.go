@@ -11,7 +11,7 @@ import (
 
 type historyTable struct {
 	*tview.Table
-	uiState  *UIState
+	ui       *UIState
 	rows     []*historyRow
 	cols     []*commitInfo
 	doUpdate bool
@@ -36,9 +36,9 @@ type commitInfo struct {
 
 func newHistoryTable(ui *UIState) (*historyTable, error) {
 	h := &historyTable{
-		uiState: ui,
-		col:     -1,
-		row:     -1,
+		ui:  ui,
+		col: -1,
+		row: -1,
 	}
 	err := h.buildInfo()
 	if err != nil {
@@ -66,7 +66,7 @@ func newCommitInfo(c reviewCommit) *commitInfo {
 }
 
 func (h *historyTable) buildInfo() error {
-	cs := h.uiState.review.reviewCommits
+	cs := h.ui.review.reviewCommits
 	forwardCommits := make([]reviewCommit, len(cs))
 	copy(forwardCommits, cs)
 	reverseReviewCommits(forwardCommits)
@@ -135,7 +135,9 @@ func (h *historyTable) buildInfo() error {
 func (h *historyTable) buildTable() {
 	table := tview.NewTable()
 	table.SetBorderPadding(1, 1, 1, 1)
-	table.SetBackgroundColor(tcell.ColorDefault)
+	table.SetBackgroundColor(h.ui.theme.Background)
+	table.SetBordersColor(h.ui.theme.GridColor)
+	table.SetBorderAttributes(h.ui.theme.GridStyle)
 
 	table.SetCell(0, 0, tview.NewTableCell("").SetSelectable(false))
 	for i, x := range h.cols {
@@ -155,16 +157,19 @@ func (h *historyTable) buildTable() {
 	table.SetBorders(true)
 	table.SetFixed(1, 1)
 	table.SetSelectable(true, true)
-	table.SetSelectedStyle(tcell.ColorDefault, tcell.Color25, tcell.AttrBold)
+	table.SetSelectedStyle(
+		h.ui.theme.CursorForeground,
+		h.ui.theme.CursorBackground,
+		h.ui.theme.CursorStyle)
 	table.SetSelectionChangedFunc(func(row, col int) {
 		// Remove the borders
-		row -= 1
-		col -= 1
+		row--
+		col--
 		h.moveCursors(row, col)
 		h.doUpdate = true
 
 		if col >= 0 {
-			h.uiState.update(func(ui *UIState) error {
+			h.ui.update(func(ui *UIState) error {
 				ui.selectedCommit = &h.cols[col].commit
 				return nil
 			})
@@ -279,12 +284,12 @@ func (h *historyTable) moveCursors(newrow, newcol int) {
 		if h.row >= 0 {
 			x := h.rows[h.row]
 			for _, cell := range x.commits {
-				cell.SetBackgroundColor(tcell.ColorDefault)
+				cell.setDeselected(h)
 			}
 		}
 		x := h.rows[newrow]
 		for _, cell := range x.commits {
-			cell.SetBackgroundColor(tcell.Color236)
+			cell.setSelected(h)
 		}
 		h.row = newrow
 	}
@@ -295,12 +300,12 @@ func (h *historyTable) moveCursors(newrow, newcol int) {
 					continue
 				}
 				x := r.commits[h.col]
-				x.SetBackgroundColor(tcell.ColorDefault)
+				x.setDeselected(h)
 			}
 		}
 		for _, r := range h.rows {
 			x := r.commits[newcol]
-			x.SetBackgroundColor(tcell.Color236)
+			x.setSelected(h)
 		}
 		h.col = newcol
 	}

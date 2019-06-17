@@ -9,6 +9,7 @@ func ReviewUIMain(r *Review) error {
 	}
 	ui := &UIState{
 		review: rs,
+		theme:  &defaultTheme,
 	}
 	table, err := newHistoryTable(ui)
 	if err != nil {

@@ -5,6 +5,7 @@ import "github.com/rivo/tview"
 type uiStateFunc func() error
 
 type UIState struct {
+	theme          *Theme
 	review         *reviewState
 	selectedCommit *reviewCommit
 	listeners      []uiStateFunc

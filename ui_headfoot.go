@@ -1,7 +1,6 @@
 package crit
 
 import (
-	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
@@ -13,7 +12,7 @@ type uiFooter struct {
 func newFooter(ui *UIState) (*uiFooter, error) {
 	//t := tview.NewTextView()
 	t := newToolbar()
-	t.SetBackgroundColor(tcell.ColorDarkBlue)
+	t.SetBackgroundColor(ui.theme.ToolbarBackground)
 	t.SetDynamicColors(true)
 	t.AddLine("[white]crit v0.1", "hello", "[green]world")
 	f := &uiFooter{
@@ -31,7 +30,7 @@ type uiHeader struct {
 func newHeader(ui *UIState) (*uiHeader, error) {
 
 	t := tview.NewTextView()
-	t.SetBackgroundColor(tcell.ColorDarkBlue)
+	t.SetBackgroundColor(ui.theme.ToolbarBackground)
 	t.SetDynamicColors(true)
 	t.SetText("[white]hjkl:Move Cursor  x:SelFile  c:SelCommit  Ret:Open  ?:Help")
 	h := &uiHeader{
