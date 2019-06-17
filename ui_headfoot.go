@@ -32,7 +32,7 @@ func newHeader(ui *UIState) (*uiHeader, error) {
 	t := tview.NewTextView()
 	t.SetBackgroundColor(ui.theme.ToolbarBackground)
 	t.SetDynamicColors(true)
-	t.SetText("[white]hjkl:Move Cursor  x:SelFile  c:SelCommit  Ret:Open  ?:Help")
+	t.SetText("[white]hjkl:Move Cursor  q:Quit")
 	h := &uiHeader{
 		TextView: t,
 		ui:       ui,

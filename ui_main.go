@@ -1,6 +1,9 @@
 package crit
 
-import "github.com/rivo/tview"
+import (
+	"github.com/gdamore/tcell"
+	"github.com/rivo/tview"
+)
 
 func ReviewUIMain(r *Review) error {
 	rs, err := newReviewState(r)
@@ -40,6 +43,19 @@ func ReviewUIMain(r *Review) error {
 	vflex.AddItem(footer, 1, 1, false)
 	app := tview.NewApplication()
 	app.SetRoot(vflex, true)
+	app.SetInputCapture(highlevelKeyCapture(app))
 	ui.app = app
 	return app.Run()
+}
+
+func highlevelKeyCapture(app *tview.Application) func(*tcell.EventKey) *tcell.EventKey {
+
+	return func(key *tcell.EventKey) *tcell.EventKey {
+		if key.Key() == tcell.KeyRune {
+			if key.Rune() == 'q' {
+				app.Stop()
+			}
+		}
+		return key
+	}
 }
