@@ -35,6 +35,7 @@ type commitCell struct {
 type commitInfo struct {
 	*tview.TableCell
 	commit reviewCommit
+	table  *historyTable
 }
 
 func newHistoryTable(ui *UIState) (*historyTable, error) {
@@ -61,10 +62,11 @@ func newCommitCell(r *historyRow, c *reviewCommit) *commitCell {
 	}
 }
 
-func newCommitInfo(c reviewCommit) *commitInfo {
+func newCommitInfo(c reviewCommit, table *historyTable) *commitInfo {
 	return &commitInfo{
 		TableCell: tview.NewTableCell(""),
 		commit:    c,
+		table:     table,
 	}
 }
 
@@ -117,7 +119,7 @@ func (h *historyTable) buildInfo() error {
 		if err != nil {
 			return err
 		}
-		h.cols = append(h.cols, newCommitInfo(c))
+		h.cols = append(h.cols, newCommitInfo(c, h))
 		for _, v := range files {
 			if len(v.commits) != len(h.cols) {
 				v.commits = append(v.commits, newCommitCell(v, nil))
@@ -163,23 +165,26 @@ func (h *historyTable) buildTable() {
 	table.SetFixed(1, 1)
 	table.SetSelectable(true, true)
 	table.SetSelectedStyle(h.ui.theme.Cursor.Decompose())
-	table.SetSelectionChangedFunc(func(row, col int) {
-		// Remove the borders
-		row--
-		col--
-		h.moveCursors(row, col)
-		h.doUpdate = true
-
-		if col >= 0 {
-			h.ui.update(func(ui *UIState) error {
-				ui.selectedCommit = &h.cols[col].commit
-				return nil
-			})
-		}
-	})
+	table.SetSelectionChangedFunc(h.selectionChangedFunc)
 	h.row = 0
 	h.col = len(h.cols) - 1
 	table.Select(1, len(h.cols))
+	h.selectionChangedFunc(1, len(h.cols))
+}
+
+func (h *historyTable) selectionChangedFunc(row, col int) {
+	// Remove the borders
+	row--
+	col--
+	h.moveCursors(row, col)
+	h.doUpdate = true
+
+	if col >= 0 {
+		h.ui.update(func(ui *UIState) error {
+			ui.selectedCommit = &h.cols[col].commit
+			return nil
+		})
+	}
 }
 
 func (h *historyTable) Draw(screen tcell.Screen) {
@@ -224,6 +229,8 @@ func (h *historyTable) moveCursors(newrow, newcol int) {
 		h.row = newrow
 	}
 	if newcol >= 0 && newcol < len(h.cols) {
+		h.cols[h.col].updateColors(false)
+		h.cols[newcol].updateColors(true)
 		h.col = newcol
 	}
 }
@@ -233,4 +240,12 @@ func reverseReviewCommits(a []reviewCommit) {
 		opp := len(a) - 1 - i
 		a[i], a[opp] = a[opp], a[i]
 	}
+}
+
+func (ci *commitInfo) updateColors(selected bool) {
+	if selected {
+		ci.SetStyle(ci.table.ui.theme.SelectedCommit)
+		return
+	}
+	ci.SetStyle(ci.table.ui.theme.Default)
 }
