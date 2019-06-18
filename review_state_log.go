@@ -39,3 +39,7 @@ func (rs *reviewState) isRead(file string, hash plumbing.Hash) bool {
 	}
 	return isRead
 }
+
+func (rc *reviewCommit) isRead(file string) bool {
+	return rc.state.isRead(file, rc.commit.ID())
+}

@@ -22,10 +22,13 @@ type historyRow struct {
 	headCell *tview.TableCell
 	filename string
 	commits  []*commitCell
+	selected selection
+	table    *historyTable
 }
 
 type commitCell struct {
 	*tview.TableCell
+	row    *historyRow
 	commit *reviewCommit
 }
 
@@ -47,14 +50,14 @@ func newHistoryTable(ui *UIState) (*historyTable, error) {
 	h.buildTable()
 	h.setColsToShortSHA()
 	h.setRowsToDiff()
-	h.moveCursors(0, 0)
 	return h, nil
 }
 
-func newCommitCell(c *reviewCommit) *commitCell {
+func newCommitCell(r *historyRow, c *reviewCommit) *commitCell {
 	return &commitCell{
 		TableCell: tview.NewTableCell(""),
 		commit:    c,
+		row:       r,
 	}
 }
 
@@ -99,15 +102,16 @@ func (h *historyTable) buildInfo() error {
 					headCell: tview.NewTableCell(f.Name),
 					filename: f.Name,
 					commits:  make([]*commitCell, len(h.cols)),
+					table:    h,
 				}
 				for i := 0; i < len(hr.commits); i++ {
-					hr.commits[i] = newCommitCell(nil)
+					hr.commits[i] = newCommitCell(hr, nil)
 				}
 				files[f.Name] = hr
 				v = hr
 			}
 			ccopy := c
-			v.commits = append(v.commits, newCommitCell(&ccopy))
+			v.commits = append(v.commits, newCommitCell(v, &ccopy))
 			return nil
 		})
 		if err != nil {
@@ -116,7 +120,7 @@ func (h *historyTable) buildInfo() error {
 		h.cols = append(h.cols, newCommitInfo(c))
 		for _, v := range files {
 			if len(v.commits) != len(h.cols) {
-				v.commits = append(v.commits, newCommitCell(nil))
+				v.commits = append(v.commits, newCommitCell(v, nil))
 			}
 		}
 	}
@@ -175,6 +179,9 @@ func (h *historyTable) buildTable() {
 			})
 		}
 	})
+	h.row = 0
+	h.col = len(h.cols) - 1
+	table.Select(1, len(h.cols))
 }
 
 func (h *historyTable) Draw(screen tcell.Screen) {
@@ -216,32 +223,9 @@ func (h *historyTable) setRowsToDiff() {
 
 func (h *historyTable) moveCursors(newrow, newcol int) {
 	if newrow >= 0 && newrow < len(h.rows) {
-		if h.row >= 0 {
-			x := h.rows[h.row]
-			for _, cell := range x.commits {
-				cell.setDeselected(h)
-			}
-		}
-		x := h.rows[newrow]
-		for _, cell := range x.commits {
-			cell.setSelected(h)
-		}
 		h.row = newrow
 	}
 	if newcol >= 0 && newcol < len(h.cols) {
-		if h.col >= 0 {
-			for i, r := range h.rows {
-				if i == newrow {
-					continue
-				}
-				x := r.commits[h.col]
-				x.setDeselected(h)
-			}
-		}
-		for _, r := range h.rows {
-			x := r.commits[newcol]
-			x.setSelected(h)
-		}
 		h.col = newcol
 	}
 }

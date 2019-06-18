@@ -24,6 +24,7 @@ type reviewState struct {
 type reviewCommit struct {
 	commit *object.Commit
 	base   *plumbing.Hash
+	state  *reviewState
 }
 
 func (rc reviewCommit) mustGetBaseCommit(rs *reviewState) *object.Commit {
@@ -123,6 +124,7 @@ func (rs *reviewState) loadReviewCommits() error {
 		rc := reviewCommit{
 			commit: c,
 			base:   baseHash,
+			state:  rs,
 		}
 		rs.reviewCommits = append(rs.reviewCommits, rc)
 		if c.NumParents() == 0 {

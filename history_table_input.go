@@ -5,6 +5,10 @@ import (
 	"github.com/rivo/tview"
 )
 
+type selection struct {
+	from, to int
+}
+
 func (h *historyTable) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 	return func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 		k := event
@@ -54,7 +58,7 @@ func (h *historyTable) cursorInput(event *tcell.EventKey) *tcell.EventKey {
 		case 'h':
 			return clampLeft()
 		case 'j':
-			// You start wearin' blue and brown and...
+			// No man born with a living soul can...
 			return clampDown()
 		case 'k':
 			return clampUp()
@@ -64,7 +68,7 @@ func (h *historyTable) cursorInput(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyUp:
 		return clampUp()
 	case tcell.KeyDown:
-		// No man born with a living soul is...
+		// You start wearin' blue and brown and...
 		return clampDown()
 	case tcell.KeyLeft:
 		return clampLeft()
@@ -76,5 +80,70 @@ func (h *historyTable) cursorInput(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func (h *historyTable) selectionInput(event *tcell.EventKey) *tcell.EventKey {
+	key := event.Key()
+	r := h.rows[h.row]
+	switch key {
+	case tcell.KeyRune:
+		switch event.Rune() {
+		case 'x':
+			r.selectDefault()
+		case 'u':
+			r.unselect()
+		case 'd':
+			//			r.selectEnd(h.col)
+		case 'b':
+			//			r.selectBegin(h.col)
+		case 'c':
+			//for _, x := range h.rows {
+			//				x.selectEnd(h.col)
+			//}
+		}
+	}
+	r.updateColors()
 	return event
+}
+
+func (hr *historyRow) selectDefault() {
+	var s selection
+	if hr.selected.from != 0 || hr.selected.to != 0 {
+		hr.unselect()
+		return
+	}
+	start := 0
+	for i, c := range hr.commits {
+		if c.commit == nil {
+			continue
+		}
+		if c.commit.isRead(hr.filename) {
+			start = i
+			continue
+		}
+		s.from = start
+		break
+	}
+	s.to = len(hr.commits)
+	hr.selected = s
+}
+
+func (hr *historyRow) unselect() {
+	hr.selected = selection{}
+}
+
+func (hr *historyRow) theme() *Theme {
+	return hr.table.ui.theme
+}
+
+func (hr *historyRow) updateColors() {
+	if hr.selected.from != hr.selected.to {
+		hr.headCell.SetAttributes(hr.theme().SelectedFileStyle)
+	} else {
+		hr.headCell.SetAttributes(hr.theme().Style)
+	}
+	for i, cc := range hr.commits {
+		if i >= hr.selected.from && i < hr.selected.to {
+			cc.SetBackgroundColor(hr.theme().SelectedBackground)
+			continue
+		}
+		cc.SetBackgroundColor(hr.theme().Background)
+	}
 }
