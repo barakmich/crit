@@ -13,8 +13,9 @@ type commitDetail struct {
 
 func newCommitDetail(ui *UIState) (*commitDetail, error) {
 	text := tview.NewTextView()
-	text.SetBackgroundColor(ui.theme.CommitDetailBackground)
-	text.SetTextColor(ui.theme.CommitDetailForeground)
+	fg, bg, _ := ui.theme.CommitDetail.Decompose()
+	text.SetBackgroundColor(bg)
+	text.SetTextColor(fg)
 	text.SetBorder(true)
 	cd := &commitDetail{
 		TextView: text,

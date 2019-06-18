@@ -75,7 +75,6 @@ func (h *historyTable) cursorInput(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyRight:
 		return clampRight()
 	}
-	//h.doUpdate = true
 	return event
 }
 
@@ -135,15 +134,15 @@ func (hr *historyRow) theme() *Theme {
 
 func (hr *historyRow) updateColors() {
 	if hr.selected.from != hr.selected.to {
-		hr.headCell.SetAttributes(hr.theme().SelectedFileStyle)
+		hr.headCell.SetStyle(hr.theme().SelectedFile)
 	} else {
-		hr.headCell.SetAttributes(hr.theme().Style)
+		hr.headCell.SetStyle(hr.theme().Default)
 	}
 	for i, cc := range hr.commits {
 		if i >= hr.selected.from && i < hr.selected.to {
-			cc.SetBackgroundColor(hr.theme().SelectedBackground)
+			cc.SetStyle(hr.theme().SelectedCell)
 			continue
 		}
-		cc.SetBackgroundColor(hr.theme().Background)
+		cc.SetStyle(hr.theme().Default)
 	}
 }

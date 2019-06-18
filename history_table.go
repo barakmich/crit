@@ -139,9 +139,10 @@ func (h *historyTable) buildInfo() error {
 func (h *historyTable) buildTable() {
 	table := tview.NewTable()
 	table.SetBorderPadding(1, 1, 1, 1)
-	table.SetBackgroundColor(h.ui.theme.Background)
-	table.SetBordersColor(h.ui.theme.GridColor)
-	table.SetBorderAttributes(h.ui.theme.GridStyle)
+	fg, bg, style := h.ui.theme.Default.Decompose()
+	table.SetBackgroundColor(bg)
+	table.SetBordersColor(fg)
+	table.SetBorderAttributes(style)
 
 	table.SetCell(0, 0, tview.NewTableCell("").SetSelectable(false))
 	for i, x := range h.cols {
@@ -161,10 +162,7 @@ func (h *historyTable) buildTable() {
 	table.SetBorders(true)
 	table.SetFixed(1, 1)
 	table.SetSelectable(true, true)
-	table.SetSelectedStyle(
-		h.ui.theme.CursorForeground,
-		h.ui.theme.CursorBackground,
-		h.ui.theme.CursorStyle)
+	table.SetSelectedStyle(h.ui.theme.Cursor.Decompose())
 	table.SetSelectionChangedFunc(func(row, col int) {
 		// Remove the borders
 		row--

@@ -12,7 +12,8 @@ type uiFooter struct {
 func newFooter(ui *UIState) (*uiFooter, error) {
 	//t := tview.NewTextView()
 	t := newToolbar()
-	t.SetBackgroundColor(ui.theme.ToolbarBackground)
+	_, bg, _ := ui.theme.Toolbar.Decompose()
+	t.SetBackgroundColor(bg)
 	t.SetDynamicColors(true)
 	t.AddLine("[white]crit v0.1", "hello", "[green]world")
 	f := &uiFooter{
@@ -30,7 +31,8 @@ type uiHeader struct {
 func newHeader(ui *UIState) (*uiHeader, error) {
 
 	t := tview.NewTextView()
-	t.SetBackgroundColor(ui.theme.ToolbarBackground)
+	_, bg, _ := ui.theme.Toolbar.Decompose()
+	t.SetBackgroundColor(bg)
 	t.SetDynamicColors(true)
 	t.SetText("[white]hjkl:Move Cursor  q:Quit")
 	h := &uiHeader{
