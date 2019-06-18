@@ -86,16 +86,22 @@ func (h *historyTable) selectionInput(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Rune() {
 		case 'x':
 			r.selectDefault()
-		case 'u':
-			r.unselect()
 		case 'd':
-			//			r.selectEnd(h.col)
-		case 'b':
-			//			r.selectBegin(h.col)
+			r.unselect()
+		case 't':
+			r.selectEnd(h.col)
+		case 'f':
+			r.selectBegin(h.col)
 		case 'c':
-			//for _, x := range h.rows {
-			//				x.selectEnd(h.col)
-			//}
+			for _, x := range h.rows {
+				x.selectEnd(h.col)
+				x.updateColors()
+			}
+		case 's':
+			for _, x := range h.rows {
+				x.selectBegin(h.col)
+				x.updateColors()
+			}
 		}
 	}
 	r.updateColors()
@@ -126,6 +132,20 @@ func (hr *historyRow) selectDefault() {
 
 func (hr *historyRow) unselect() {
 	hr.selected = selection{}
+}
+
+func (hr *historyRow) selectBegin(col int) {
+	hr.selected.from = col
+	if hr.selected.to <= col {
+		hr.selected.to = col + 1
+	}
+}
+
+func (hr *historyRow) selectEnd(col int) {
+	hr.selected.to = col + 1
+	if hr.selected.from >= col+1 {
+		hr.selected.from = col
+	}
 }
 
 func (hr *historyRow) theme() *Theme {
