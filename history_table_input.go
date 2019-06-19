@@ -81,6 +81,7 @@ func (h *historyTable) cursorInput(event *tcell.EventKey) *tcell.EventKey {
 func (h *historyTable) selectionInput(event *tcell.EventKey) *tcell.EventKey {
 	key := event.Key()
 	r := h.rows[h.row]
+	forward := false
 	switch key {
 	case tcell.KeyRune:
 		switch event.Rune() {
@@ -95,17 +96,28 @@ func (h *historyTable) selectionInput(event *tcell.EventKey) *tcell.EventKey {
 		case 'c':
 			for _, x := range h.rows {
 				x.selectEnd(h.col)
-				x.updateColors()
 			}
 		case 's':
 			for _, x := range h.rows {
 				x.selectBegin(h.col)
-				x.updateColors()
 			}
+		default:
+			forward = true
 		}
+	case tcell.KeyEnter:
+		fs := h.buildFileSet()
+		if fs == nil {
+			break
+		}
+		h.ui.fileSet = fs
+		h.ui.app.startFileSetView()
+	default:
+		forward = true
 	}
-	r.updateColors()
-	return event
+	if forward {
+		return event
+	}
+	return nil
 }
 
 func (hr *historyRow) selectDefault() {
@@ -128,10 +140,12 @@ func (hr *historyRow) selectDefault() {
 	}
 	s.to = len(hr.commits)
 	hr.selected = s
+	hr.updateColors()
 }
 
 func (hr *historyRow) unselect() {
 	hr.selected = selection{}
+	hr.updateColors()
 }
 
 func (hr *historyRow) selectBegin(col int) {
@@ -139,6 +153,7 @@ func (hr *historyRow) selectBegin(col int) {
 	if hr.selected.to <= col {
 		hr.selected.to = col + 1
 	}
+	hr.updateColors()
 }
 
 func (hr *historyRow) selectEnd(col int) {
@@ -146,6 +161,7 @@ func (hr *historyRow) selectEnd(col int) {
 	if hr.selected.from >= col+1 {
 		hr.selected.from = col
 	}
+	hr.updateColors()
 }
 
 func (hr *historyRow) theme() *Theme {

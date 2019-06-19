@@ -1,7 +1,5 @@
 package crit
 
-import "github.com/rivo/tview"
-
 type uiStateFunc func() error
 
 type UIState struct {
@@ -9,7 +7,8 @@ type UIState struct {
 	review         *reviewState
 	selectedCommit *reviewCommit
 	listeners      []uiStateFunc
-	app            *tview.Application
+	app            *app
+	fileSet        *fileSet
 }
 
 func (ui *UIState) registerChange(f uiStateFunc) {

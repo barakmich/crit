@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
@@ -14,7 +13,6 @@ type historyTable struct {
 	ui       *UIState
 	rows     []*historyRow
 	cols     []*commitInfo
-	doUpdate bool
 	col, row int
 }
 
@@ -177,7 +175,6 @@ func (h *historyTable) selectionChangedFunc(row, col int) {
 	row--
 	col--
 	h.moveCursors(row, col)
-	h.doUpdate = true
 
 	if col >= 0 {
 		h.ui.update(func(ui *UIState) error {
@@ -185,14 +182,6 @@ func (h *historyTable) selectionChangedFunc(row, col int) {
 			return nil
 		})
 	}
-}
-
-func (h *historyTable) Draw(screen tcell.Screen) {
-	if h.doUpdate {
-		screen.Clear()
-		h.doUpdate = false
-	}
-	h.Table.Draw(screen)
 }
 
 func (h *historyTable) setColsToShortSHA() {
@@ -222,6 +211,44 @@ func (h *historyTable) setRowsToDiff() {
 			}
 		}
 	}
+}
+
+func (h *historyTable) buildFileSet() *fileSet {
+	fs := &fileSet{
+		files: make(map[string]*fileSetInfo),
+	}
+	for _, r := range h.rows {
+		if r.selected.from == r.selected.to {
+			continue
+		}
+		var commitRange []*reviewCommit
+		for i := r.selected.from; i < r.selected.to; i++ {
+			if r.commits[i].commit != nil {
+				commitRange = append(commitRange, r.commits[i].commit)
+			}
+		}
+		if len(commitRange) == 0 {
+			continue
+		}
+		var bc *object.Commit
+		if r.selected.from == 0 {
+			bc = commitRange[0].mustGetBaseCommit(h.ui.review)
+		} else {
+			bc = h.cols[r.selected.from-1].commit.commit
+		}
+		tc := commitRange[len(commitRange)-1].commit
+		fsi := &fileSetInfo{
+			filename:     r.filename,
+			baseCommit:   bc,
+			targetCommit: tc,
+			commitRange:  commitRange,
+		}
+		fs.files[r.filename] = fsi
+	}
+	if len(fs.files) == 0 {
+		return nil
+	}
+	return fs
 }
 
 func (h *historyTable) moveCursors(newrow, newcol int) {
